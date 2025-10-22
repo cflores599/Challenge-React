@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Layout: dejar 10% a cada lado en pantallas amplias === */
+.page-wrapper {
+  padding-left: 10%;
+  padding-right: 10%;
+}
+
+/* === Base colors / body === */
+:root {
+  --brand: #7E1E9B;
+  --brandLight: #A64FC2;
+  --border: #E5E7EB;
+  --bgLight: #F9FAFB;
+}
+body {
+  @apply bg-bgLight font-sans text-gray-800;
+}
+
+/* === Cards === */
+.card {
+  @apply bg-white rounded-xl shadow-card border border-border overflow-hidden transition-transform duration-150 flex flex-col;
+}
+.card:hover { @apply scale-[1.01] shadow-soft; }
+
+/* fixed card body + hidden scrollbar */
+.card-body { @apply h-64 p-4 overflow-auto scroll-hidden; }
+
+/* hide scrollbar */
+.scroll-hidden::-webkit-scrollbar { display: none; }
+.scroll-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* buttons */
+.btn { @apply inline-flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-all; }
+.btn-primary { @apply bg-brand text-white hover:bg-brandLight focus:ring-2 focus:ring-brand/50; }
+.btn-muted  { @apply bg-gray-200 hover:bg-gray-300 text-gray-700; }
+
+/* icon row aligned with cards (grid) */
+.icon-grid { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end; }
+.icon-grid .icon-cell { @apply flex items-center justify-center; }
+.icon-circle { @apply w-10 h-10 rounded-full flex items-center justify-center border border-border text-brand; }
+
+/* purple divider */
+.purple-divider { @apply h-1 bg-brand rounded-full w-full mt-2 mb-4; }
+
+/* card footer pill */
+.card-footer { @apply mt-auto bg-brand text-white text-sm font-medium text-center py-2 rounded-b-xl; }
+
+/* card dotted (ultimate) */
+.card-dotted { border-style: dashed; border-width: 2px; border-color: rgba(126,30,155,0.15); }
+
+/* table title */
+.card-title { @apply text-sm font-semibold mb-3; }
+
+/* fancy select (certainty) */
+.fancy-select-wrapper { position: relative; display: inline-block; width: 100%; }
+.fancy-select {
+  @apply appearance-none w-full p-2 border rounded text-sm bg-white;
+  padding-right: 2.5rem;
+}
+.fancy-select:focus { outline: none; box-shadow: 0 0 0 4px rgba(126,30,155,0.08); border-color: rgba(126,30,155,0.6); }
+
+/* pseudo arrow for select using background SVG via inline data URI is tricky in CSS file; we'll add a small absolute svg */
+.fancy-arrow {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* small util */
+.kicker { @apply text-xs text-gray-500; }
+
+/* animation */
+@keyframes fade-in { from {opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
