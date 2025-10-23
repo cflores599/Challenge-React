@@ -1,33 +1,26 @@
-import React, { useState } from "react";
-import { saveJSON } from "../utils/storage";
+import React from "react";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 export default function SaveBar({ data, dirty, onSaved }) {
-  const [savedMsg, setSavedMsg] = useState("");
-
   function handleSave() {
-    console.log("Saved JSON:", JSON.stringify(data, null, 2));
-    saveJSON("challenge_snapshot", data);
-    setSavedMsg("Saved!");
+    console.log("=== Saved JSON ===");
+    console.log(JSON.stringify(data, null, 2));
+    alert("✅ Saved!");
     onSaved?.();
-    setTimeout(() => setSavedMsg(""), 2000);
   }
 
   return (
-    <div className="fixed right-6 bottom-6 z-50">
+    <div className="fixed bottom-4 right-6">
       <button
-        disabled={!dirty}
         onClick={handleSave}
-        className={`btn ${
-          dirty ? "btn-primary" : "btn-muted cursor-not-allowed"
-        } shadow-sm`}
+        disabled={!dirty}
+        className={`btn btn-primary px-4 py-2 text-sm flex items-center gap-2 shadow-md ${
+          !dirty ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
-        💾 Save
+        <CheckCircleIcon className="w-4 h-4" />
+        Save
       </button>
-      {savedMsg && (
-        <div className="mt-2 text-sm text-green-600 animate-fade-in">
-          {savedMsg}
-        </div>
-      )}
     </div>
   );
 }

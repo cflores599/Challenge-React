@@ -1,21 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
+import {
+  PencilIcon,
+  TrashIcon,
+  CheckIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
 
-const CERTAINTY = ["Very certain", "Moderately certain", "Uncertain"];
-const PER_PAGE = 5;
-
-function CertaintyPill({ value }) {
-  const color =
-    value === "Very certain"
-      ? "bg-green-100 text-green-800"
-      : value === "Moderately certain"
-      ? "bg-yellow-100 text-yellow-800"
-      : "bg-red-100 text-red-800";
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>
-      {value}
-    </span>
-  );
-}
+const CERTAINTY_COLORS = {
+  "Very certain": "bg-green-100 text-green-800",
+  "Moderately certain": "bg-yellow-100 text-yellow-800",
+  Uncertain: "bg-red-100 text-red-800",
+};
 
 export default function AssumptionsTable({
   initial = [],
@@ -23,244 +19,166 @@ export default function AssumptionsTable({
   markDirty,
 }) {
   const [rows, setRows] = useState(initial);
-  const [editing, setEditing] = useState({ id: null, desc: "", certainty: "" });
-  const [page, setPage] = useState(0);
-  const [newDesc, setNewDesc] = useState("");
-  const [newCertainty, setNewCertainty] = useState("Moderately certain");
-  const editRef = useRef();
-  const newInputRef = useRef();
+  const [editing, setEditing] = useState(null);
+  const [newRow, setNewRow] = useState({ desc: "", certainty: "Very certain" });
 
-  useEffect(() => setRows(initial || []), [initial]);
-  useEffect(() => onChange?.(rows), [rows, onChange]);
-
-  function addRow(desc, certainty = "Moderately certain") {
-    if (!desc?.trim()) return;
-    const newRow = {
-      id: Date.now().toString(),
-      description: desc.trim(),
-      certainty: certainty || "Moderately certain",
-    };
-    setRows((r) => [...r, newRow]);
-    setNewDesc("");
-    setNewCertainty("Moderately certain");
+  function handleAdd() {
+    if (!newRow.desc.trim()) return;
+    const added = [...rows, { id: Date.now(), ...newRow }];
+    setRows(added);
+    onChange(added);
     markDirty?.();
-    setTimeout(() => newInputRef.current?.focus(), 0);
-    setPage(Math.floor(rows.length / PER_PAGE));
+    setNewRow({ desc: "", certainty: "Very certain" });
   }
 
-  function deleteRow(id) {
-    setRows((r) => r.filter((x) => x.id !== id));
+  function handleDelete(id) {
+    const next = rows.filter((r) => r.id !== id);
+    setRows(next);
+    onChange(next);
     markDirty?.();
   }
-  function startEdit(row) {
-    setEditing({ id: row.id, desc: row.description, certainty: row.certainty });
-    setTimeout(() => editRef.current?.focus(), 0);
-  }
-  function saveEdit() {
-    setRows((r) =>
-      r.map((x) =>
-        x.id === editing.id
-          ? {
-              ...x,
-              description: editing.desc.trim() || x.description,
-              certainty: editing.certainty,
-            }
-          : x
-      )
-    );
-    setEditing({ id: null, desc: "", certainty: "" });
+
+  function handleSaveEdit(id, updated) {
+    const next = rows.map((r) => (r.id === id ? updated : r));
+    setRows(next);
+    onChange(next);
     markDirty?.();
-  }
-  function cancelEdit() {
-    setEditing({ id: null, desc: "", certainty: "" });
+    setEditing(null);
   }
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
-  const paged = rows.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE);
+  const CertaintySelect = ({ value, onChange }) => (
+    <div className="fancy-select-wrapper">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="fancy-select text-sm"
+      >
+        {Object.keys(CERTAINTY_COLORS).map((opt) => (
+          <option key={opt}>{opt}</option>
+        ))}
+      </select>
+      <ChevronDownIcon className="w-4 h-4 fancy-arrow text-gray-400" />
+    </div>
+  );
 
   return (
-    <div>
-      <table className="w-full text-left text-sm border-collapse">
-        <thead className="text-xs text-gray-500 border-b border-border">
-          <tr>
-            <th className="w-auto font-medium pb-2">Description</th>
-            <th className="w-[180px] font-medium pb-2">Certainty</th>
-            <th className="w-[100px] font-medium pb-2 text-center">Actions</th>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead>
+          <tr className="border-b text-gray-600">
+            <th className="text-left py-2 w-2/3">Description</th>
+            <th className="text-left py-2 w-1/5">Certainty</th>
+            <th className="text-left py-2 w-[10%]">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {paged.map((row) => (
-            <tr key={row.id} className="border-b border-gray-100 align-top">
+          {rows.map((r) => (
+            <tr
+              key={r.id}
+              className={editing === r.id ? "active-row" : "border-b"}
+            >
               <td className="py-2 pr-2">
-                {editing.id === row.id ? (
+                {editing === r.id ? (
                   <input
-                    ref={editRef}
-                    value={editing.desc}
+                    autoFocus
+                    className="w-full border rounded p-1 text-sm"
+                    value={r.desc}
                     onChange={(e) =>
-                      setEditing((e0) => ({ ...e0, desc: e.target.value }))
+                      setRows(
+                        rows.map((x) =>
+                          x.id === r.id ? { ...x, desc: e.target.value } : x
+                        )
+                      )
                     }
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEdit();
-                      if (e.key === "Escape") cancelEdit();
+                      if (e.key === "Enter") handleSaveEdit(r.id, r);
+                      if (e.key === "Escape") setEditing(null);
                     }}
-                    className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-brand/50"
-                    onMouseDown={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <div
-                    onDoubleClick={() => startEdit(row)}
-                    className="cursor-text"
-                  >
-                    {row.description}
-                  </div>
+                  r.desc
                 )}
               </td>
-
               <td className="py-2 pr-2">
-                {editing.id === row.id ? (
-                  <div
-                    className="fancy-select-wrapper"
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    <select
-                      value={editing.certainty}
-                      onChange={(e) =>
-                        setEditing((e0) => ({
-                          ...e0,
-                          certainty: e.target.value,
-                        }))
-                      }
-                      className="fancy-select"
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") cancelEdit();
-                      }}
-                    >
-                      {CERTAINTY.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    <svg
-                      className="fancy-arrow"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <path
-                        d="M6 9l6 6 6-6"
-                        stroke="#6b21a8"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      ></path>
-                    </svg>
-                  </div>
+                {editing === r.id ? (
+                  <CertaintySelect
+                    value={r.certainty}
+                    onChange={(val) =>
+                      setRows(
+                        rows.map((x) =>
+                          x.id === r.id ? { ...x, certainty: val } : x
+                        )
+                      )
+                    }
+                  />
                 ) : (
-                  <CertaintyPill value={row.certainty} />
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      CERTAINTY_COLORS[r.certainty]
+                    }`}
+                  >
+                    {r.certainty}
+                  </span>
                 )}
               </td>
-
-              <td className="py-2 text-center">
-                {editing.id === row.id ? (
-                  <>
+              <td className="py-2 text-gray-600">
+                {editing === r.id ? (
+                  <div className="flex gap-1">
                     <button
-                      onClick={saveEdit}
-                      className="text-sm mr-2 text-green-600"
-                      aria-label="save-edit"
+                      onClick={() => handleSaveEdit(r.id, r)}
+                      className="btn btn-muted p-1"
                     >
-                      ✔
+                      <CheckIcon className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={cancelEdit}
-                      className="text-sm text-gray-500"
-                      aria-label="cancel-edit"
+                      onClick={() => setEditing(null)}
+                      className="btn btn-muted p-1"
                     >
-                      ✖
+                      <XMarkIcon className="w-4 h-4" />
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="flex gap-1">
                     <button
-                      onClick={() => startEdit(row)}
-                      className="text-gray-600 mr-2"
-                      aria-label={`edit-${row.id}`}
+                      onClick={() => setEditing(r.id)}
+                      className="btn btn-muted p-1"
                     >
-                      ✏️
+                      <PencilIcon className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deleteRow(row.id)}
-                      className="text-gray-600"
-                      aria-label={`delete-${row.id}`}
+                      onClick={() => handleDelete(r.id)}
+                      className="btn btn-muted p-1"
                     >
-                      🗑
+                      <TrashIcon className="w-4 h-4" />
                     </button>
-                  </>
+                  </div>
                 )}
               </td>
             </tr>
           ))}
 
-          {/* new row */}
-          <tr className="align-top">
+          <tr className="bg-gray-50">
             <td className="py-2 pr-2">
               <input
-                ref={newInputRef}
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Add new assumption..."
+                className="w-full border rounded p-1 text-sm"
+                value={newRow.desc}
+                onChange={(e) => setNewRow({ ...newRow, desc: e.target.value })}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") addRow(newDesc, newCertainty);
+                  if (e.key === "Enter") handleAdd();
                 }}
-                placeholder="Type and press Enter to add..."
-                className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-brand/50"
-                aria-label="new-assumption-description"
-                onMouseDown={(e) => e.stopPropagation()}
               />
             </td>
-
             <td className="py-2 pr-2">
-              <div
-                className="fancy-select-wrapper"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                <select
-                  value={newCertainty}
-                  onChange={(e) => setNewCertainty(e.target.value)}
-                  className="fancy-select"
-                  aria-label="new-assumption-certainty"
-                >
-                  {CERTAINTY.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className="fancy-arrow"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden
-                >
-                  <path
-                    d="M6 9l6 6 6-6"
-                    stroke="#6b21a8"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  ></path>
-                </svg>
-              </div>
+              <CertaintySelect
+                value={newRow.certainty}
+                onChange={(val) => setNewRow({ ...newRow, certainty: val })}
+              />
             </td>
-
-            <td className="py-2 text-center">
+            <td className="py-2">
               <button
-                onClick={() => addRow(newDesc, newCertainty)}
-                className="btn btn-primary"
-                aria-label="add-assumption"
+                onClick={handleAdd}
+                className="btn btn-primary text-xs py-1 px-2"
               >
                 Add
               </button>
@@ -268,32 +186,6 @@ export default function AssumptionsTable({
           </tr>
         </tbody>
       </table>
-
-      {/* pagination */}
-      <div className="mt-3 flex justify-between text-xs text-gray-600 items-center">
-        <div>
-          Showing {paged.length} of {rows.length}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
-            className="btn btn-muted px-2 py-1 text-xs"
-          >
-            Prev
-          </button>
-          <span>
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-            className="btn btn-muted px-2 py-1 text-xs"
-          >
-            Next
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

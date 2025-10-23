@@ -1,20 +1,12 @@
-export function saveJSON(key, obj) {
-  try {
-    localStorage.setItem(key, JSON.stringify(obj));
-    return true;
-  } catch (e) {
-    console.error("Save failed", e);
-    return false;
-  }
+export function saveJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function loadJSON(key, fallback = null) {
+export function loadJSON(key, fallback) {
   try {
-    const s = localStorage.getItem(key);
-    if (!s) return fallback;
-    return JSON.parse(s);
-  } catch (e) {
-    console.error("Load failed", e);
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
     return fallback;
   }
 }

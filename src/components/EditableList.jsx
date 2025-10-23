@@ -1,129 +1,98 @@
-import React, { useState, useRef } from "react";
-
-function EditableItem({ value, onSave }) {
-  const [editing, setEditing] = useState(false);
-  const [val, setVal] = useState(value);
-  const ref = useRef();
-
-  function start() {
-    setEditing(true);
-    setTimeout(() => ref.current?.focus(), 0);
-  }
-
-  return editing ? (
-    <input
-      ref={ref}
-      value={val}
-      onChange={(e) => setVal(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          onSave(val);
-          setEditing(false);
-        }
-        if (e.key === "Escape") {
-          setVal(value);
-          setEditing(false);
-        }
-      }}
-      onBlur={() => setEditing(false)}
-      className="w-full p-1 border rounded text-sm"
-      onMouseDown={(e) => e.stopPropagation()}
-    />
-  ) : (
-    <div onDoubleClick={start} className="cursor-text text-sm">
-      {value}
-    </div>
-  );
-}
+import React, { useState } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 export default function EditableList({
-  title,
-  zoneLabel,
-  items = [],
+  items: initial = [],
   onChange,
   markDirty,
 }) {
-  const [list, setList] = useState(items || []);
-  const [showAll, setShowAll] = useState(false);
-  const inputRef = useRef();
+  const [items, setItems] = useState(initial);
+  const [editing, setEditing] = useState(null);
+  const [newText, setNewText] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
-  function add(text) {
-    const t = String(text || "").trim();
-    if (!t) return;
-    const next = [...list, { id: Date.now().toString(), text: t }];
-    setList(next);
-    onChange?.(next);
+  const visibleItems = expanded ? items : items.slice(0, 3);
+
+  function addItem() {
+    if (!newText.trim()) return;
+    const next = [...items, { id: Date.now(), text: newText }];
+    setItems(next);
+    onChange(next);
     markDirty?.();
-    if (inputRef.current) inputRef.current.value = "";
+    setNewText("");
   }
-  function remove(id) {
-    const next = list.filter((x) => x.id !== id);
-    setList(next);
-    onChange?.(next);
-    markDirty?.();
-  }
-  function edit(id, text) {
-    const next = list.map((x) => (x.id === id ? { ...x, text } : x));
-    setList(next);
-    onChange?.(next);
+
+  function updateItem(id, text) {
+    const next = items.map((i) => (i.id === id ? { ...i, text } : i));
+    setItems(next);
+    onChange(next);
     markDirty?.();
   }
 
-  const visible = showAll ? list : list.slice(0, 3);
+  function deleteItem(id) {
+    const next = items.filter((i) => i.id !== id);
+    setItems(next);
+    onChange(next);
+    markDirty?.();
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="mb-2 text-xs text-gray-500">{zoneLabel}</div>
-
-      <div className="flex-1 overflow-auto scroll-hidden pr-2">
-        <ul className="space-y-3">
-          {visible.map((item) => (
-            <li key={item.id} className="flex justify-between items-start">
-              <div className="flex-1 pr-2">
-                <EditableItem
-                  value={item.text}
-                  onSave={(v) => edit(item.id, v)}
-                />
-              </div>
-              <div className="ml-2">
-                <button
-                  aria-label={`delete-${item.id}`}
-                  onClick={() => remove(item.id)}
-                  className="text-sm"
-                >
-                  🗑
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-auto scroll-hidden space-y-1">
+        {visibleItems.map((it) => (
+          <div
+            key={it.id}
+            className="flex justify-between items-center text-sm"
+          >
+            {editing === it.id ? (
+              <input
+                autoFocus
+                className="border rounded p-1 flex-1 mr-2"
+                value={it.text}
+                onChange={(e) => updateItem(it.id, e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" || e.key === "Escape"
+                    ? setEditing(null)
+                    : null
+                }
+              />
+            ) : (
+              <div>{it.text}</div>
+            )}
+            <div className="flex gap-1">
+              <button
+                onClick={() => setEditing(editing === it.id ? null : it.id)}
+                className="btn btn-muted p-1"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => deleteItem(it.id)}
+                className="btn btn-muted p-1"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-3">
-        <input
-          ref={inputRef}
-          placeholder="Type and press Enter to add..."
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              add(e.target.value);
-              e.target.value = "";
-            }
-          }}
-          className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-brand/50"
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-        <div className="mt-2 flex items-center justify-between">
-          {list.length > 3 && (
-            <button
-              onClick={() => setShowAll((s) => !s)}
-              className="text-xs text-brand underline"
-            >
-              {showAll ? "Show less ↑" : "Show more ↓"}
-            </button>
-          )}
-          <div className="text-xs text-gray-400">{list.length} items</div>
-        </div>
-      </div>
+      <input
+        className="border rounded p-1 text-sm w-full mt-2"
+        placeholder="Type and press Enter to add"
+        value={newText}
+        onChange={(e) => setNewText(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && addItem()}
+      />
+
+      {items.length > 3 && (
+        <button
+          className="text-brand text-xs font-medium mt-2 hover:underline self-center"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? "Show less ↑" : "Show more ↓"}
+        </button>
+      )}
     </div>
   );
 }

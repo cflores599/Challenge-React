@@ -1,32 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function ReasonTextarea({ value, onChange, markDirty }) {
   const [text, setText] = useState(value || "");
-  useEffect(() => setText(value || ""), [value]);
-
+  const limit = 250;
   function handleChange(e) {
-    const v = e.target.value.slice(0, 250);
-    setText(v);
-    onChange?.(v);
+    const val = e.target.value;
+    setText(val);
+    onChange(val);
     markDirty?.();
   }
-
   return (
-    <label className="block">
-      <div className="text-sm font-medium mb-1">
-        La razón por la que existimos
-      </div>
+    <div className="flex flex-col">
       <textarea
-        aria-label="Reason"
-        placeholder="Describe brevemente por qué existimos..."
         value={text}
         onChange={handleChange}
-        className="w-full min-h-[96px] p-3 border border-border rounded-md focus:border-brand focus:ring-1 focus:ring-brand transition-shadow hover:shadow-sm"
+        placeholder="Describe the reason your organization exists..."
+        maxLength={limit}
+        className="w-full h-32 p-2 border rounded text-sm focus:ring-2 focus:ring-brand/50 resize-none"
       />
-      <div className="flex justify-between text-xs text-gray-500 mt-1">
-        <span>Helper: conciso y claro.</span>
-        <span>{text.length}/250</span>
+      <div className="text-xs text-gray-500 mt-1 text-right">
+        {text.length}/{limit}
       </div>
-    </label>
+    </div>
   );
 }

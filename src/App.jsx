@@ -7,12 +7,20 @@ import EditableList from "./components/EditableList";
 import SaveBar from "./components/SaveBar";
 import useDirty from "./hooks/useDirty";
 import { loadJSON } from "./utils/storage";
+import {
+  UserGroupIcon,
+  ClipboardDocumentListIcon,
+  ArrowsRightLeftIcon,
+  ArrowUpTrayIcon,
+} from "@heroicons/react/24/outline";
+
 
 export default function App() {
   const saved = loadJSON("challenge_snapshot", null);
 
   const defaultPrograms = [
     { id: "p1", text: "Community workshops and after-school activities" },
+    { id: "p2", text: "Teacher training and mentorship programs" },
   ];
   const defaultDirect = [
     {
@@ -20,10 +28,8 @@ export default function App() {
       title: "Students enhance their digital skills",
       open: false,
       subs: [
-        {
-          id: "d1s1",
-          text: "Students incorporate resilience and wellbeing practices",
-        },
+        { id: "s1", text: "Increased confidence using technology" },
+        { id: "s2", text: "Ability to solve basic digital problems" },
       ],
     },
   ];
@@ -67,7 +73,6 @@ export default function App() {
     directOutcomes,
     indirectOutcomes,
     ultimateOutcomes,
-    meta: { savedAt: new Date().toISOString() },
   };
   function handleSave() {
     reset();
@@ -78,6 +83,7 @@ export default function App() {
       <div className="page-wrapper py-10">
         <h1 className="text-2xl font-bold text-brand mb-6">Theory of change</h1>
 
+        {/* first row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="card p-4">
             <div className="card-title">The reason we exist</div>
@@ -102,6 +108,7 @@ export default function App() {
           </div>
         </div>
 
+        {/* assumptions */}
         <div className="card p-4 mb-6">
           <div className="card-title">What we believe to be true</div>
           <div className="p-2">
@@ -113,33 +120,41 @@ export default function App() {
           </div>
         </div>
 
+        {/* icon grid aligned */}
         <div className="icon-grid mb-2">
           <div className="icon-cell">
-            <div className="icon-circle">👥</div>
+            <div className="icon-circle">
+              <UserGroupIcon className="w-5 h-5" />
+            </div>
           </div>
           <div className="icon-cell">
-            <div className="icon-circle">📋</div>
+            <div className="icon-circle">
+              <ClipboardDocumentListIcon className="w-5 h-5" />
+            </div>
           </div>
           <div className="icon-cell">
-            <div className="icon-circle">🔁</div>
+            <div className="icon-circle">
+              <ArrowsRightLeftIcon className="w-5 h-5" />
+            </div>
           </div>
           <div className="icon-cell">
-            <div className="icon-circle">🎯</div>
+            <div className="icon-circle">
+              <ArrowUpTrayIcon className="w-5 h-5" />
+            </div>
           </div>
         </div>
         <div className="purple-divider" />
 
+        {/* cards row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="card p-4">
             <div className="card-title">Programmes</div>
             <div className="card-body">
-              <div className="text-sm text-gray-700">
-                {programs.map((p) => (
-                  <div key={p.id} className="mb-2">
-                    {p.text}
-                  </div>
-                ))}
-              </div>
+              {programs.map((p) => (
+                <div key={p.id} className="mb-2 text-sm">
+                  {p.text}
+                </div>
+              ))}
             </div>
             <div className="card-footer">Zone of control</div>
           </div>

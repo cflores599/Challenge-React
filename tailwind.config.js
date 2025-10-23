@@ -10,11 +10,20 @@ export default {
         bgLight: "#F9FAFB",
       },
       boxShadow: {
-        card: "0 2px 4px rgba(0,0,0,0.05)",
-        soft: "0 1px 3px rgba(0,0,0,0.04)",
+        card: "0 2px 8px rgba(16,24,40,0.04)",
+        soft: "0 6px 18px rgba(16,24,40,0.06)",
       },
       fontFamily: {
-        sans: ['"Inter"', "system-ui", "sans-serif"],
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica",
+          "Arial",
+        ],
       },
     },
   },
