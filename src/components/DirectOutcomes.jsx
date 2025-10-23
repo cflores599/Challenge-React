@@ -4,6 +4,7 @@ import {
   ChevronUpIcon,
   PencilIcon,
   TrashIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 
 /**
@@ -180,8 +181,8 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
                         saveEditOutcome(outcome.id, outcome.title);
                       if (e.key === "Escape") cancelEditOutcome();
                     }}
-                    onBlur={() => cancelEditOutcome()}
-                    className="w-full border rounded p-1 text-sm"
+                    className="w-full border rounded p-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
+                    aria-label="Edit outcome title"
                   />
                 ) : (
                   <div className="font-medium text-sm whitespace-pre-wrap break-words">
@@ -191,6 +192,23 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
               </div>
 
               <div className="flex items-center gap-1 justify-end">
+                {/* Add suboutcome */}
+                <button
+                  onClick={() => {
+                    if (expandedId !== outcome.id) {
+                      setExpandedId(outcome.id);
+                      setTimeout(() => newSubRefs.current[outcome.id]?.focus(), 0);
+                    } else {
+                      newSubRefs.current[outcome.id]?.focus();
+                    }
+                  }}
+                  className="btn btn-muted p-0.5"
+                  aria-label="Add suboutcome"
+                  title="Add suboutcome"
+                >
+                  <PlusIcon className="w-2.5 h-2.5" />
+                </button>
+
                 {/* Edit */}
                 <button
                   onClick={() =>
@@ -242,7 +260,7 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
                     editingSub.subId === sub.id ? (
                       <input
                         ref={editSubRef}
-                        className="border rounded p-1 flex-1 text-sm"
+                        className="border rounded p-1 flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                         value={sub.text}
                         onChange={(e) => {
                           const next = outcomes.map((o) =>
@@ -264,7 +282,7 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
                             saveEditSub(outcome.id, sub.id, sub.text);
                           if (e.key === "Escape") cancelEditSub();
                         }}
-                        onBlur={() => cancelEditSub()}
+                        aria-label="Edit sub-outcome"
                       />
                     ) : (
                       <div className="flex-1 text-sm break-words">
@@ -306,8 +324,8 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
                 {/* Add sub input */}
                 <input
                   ref={(el) => (newSubRefs.current[outcome.id] = el)}
-                  className="border rounded p-1 w-full text-sm"
-                  placeholder="Type and press Enter to add sub-outcome"
+                  className="border rounded p-1 w-full text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 placeholder:truncate"
+                  placeholder="Type and press Enter to add sub-outcome..."
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       const val = e.target.value;
@@ -315,6 +333,7 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
                       e.target.value = "";
                     }
                   }}
+                  aria-label="Add sub-outcome"
                 />
               </div>
             )}
@@ -353,8 +372,9 @@ export default function DirectOutcomes({ initial = [], onChange, markDirty }) {
               addOutcomeFromInput(newOutcomeText);
             }
           }}
-          placeholder="Type and press Enter to add outcome"
-          className="w-full border rounded p-2 text-sm"
+          placeholder="Type and press Enter to add outcome..."
+          className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 placeholder:truncate"
+          aria-label="Add outcome"
         />
       </div>
     </div>

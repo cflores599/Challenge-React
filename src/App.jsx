@@ -6,7 +6,7 @@ import DirectOutcomes from "./components/DirectOutcomes";
 import EditableList from "./components/EditableList";
 import SaveBar from "./components/SaveBar";
 import useDirty from "./hooks/useDirty";
-import { loadJSON } from "./utils/storage";
+import { loadJSON, saveJSON } from "./utils/storage";
 import {
   UserGroupIcon,
   ClipboardDocumentListIcon,
@@ -75,6 +75,8 @@ export default function App() {
     ultimateOutcomes,
   };
   function handleSave() {
+    // persist snapshot locally and reset dirty state
+    saveJSON("challenge_snapshot", data);
     reset();
   }
 

@@ -52,7 +52,8 @@ body {
 
 /* === Icon grid === */
 .icon-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end;
+  /* Force a single horizontal row with 4 equal columns and allow horizontal scroll on small screens */
+  @apply grid grid-flow-col auto-cols-fr gap-6 items-end overflow-x-auto scroll-hidden;
 }
 .icon-grid .icon-cell {
   @apply flex items-center justify-center;
@@ -88,10 +89,18 @@ body {
   position: relative;
   display: inline-block;
   width: 100%;
+  /* Ensure the native dropdown is above surrounding content on mobile */
+  z-index: 10;
 }
 .fancy-select {
   @apply appearance-none w-full p-2 border rounded text-sm bg-white;
   padding-right: 2.5rem;
+}
+/* iOS/Android select dropdown visibility tweaks */
+@media (max-width: 640px) {
+  .fancy-select {
+    font-size: 16px; /* avoid zoom on iOS */
+  }
 }
 .fancy-select:focus {
   outline: none;

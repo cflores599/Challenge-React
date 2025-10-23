@@ -21,6 +21,12 @@ export default function AssumptionsTable({
   const [rows, setRows] = useState(initial);
   const [editing, setEditing] = useState(null);
   const [newRow, setNewRow] = useState({ desc: "", certainty: "Very certain" });
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const pageRows = rows.slice(start, end);
 
   function handleAdd() {
     if (!newRow.desc.trim()) return;
@@ -29,6 +35,9 @@ export default function AssumptionsTable({
     onChange(added);
     markDirty?.();
     setNewRow({ desc: "", certainty: "Very certain" });
+    // go to last page to show newly added row
+    const newTotalPages = Math.max(1, Math.ceil(added.length / pageSize));
+    setPage(newTotalPages);
   }
 
   function handleDelete(id) {
@@ -36,6 +45,9 @@ export default function AssumptionsTable({
     setRows(next);
     onChange(next);
     markDirty?.();
+    // adjust page if current became empty
+    const newTotalPages = Math.max(1, Math.ceil(next.length / pageSize));
+    if (page > newTotalPages) setPage(newTotalPages);
   }
 
   function handleSaveEdit(id, updated) {
@@ -51,7 +63,8 @@ export default function AssumptionsTable({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="fancy-select text-sm"
+        className="fancy-select text-sm focus:outline-none"
+        aria-label="Select certainty"
       >
         {Object.keys(CERTAINTY_COLORS).map((opt) => (
           <option key={opt}>{opt}</option>
@@ -72,7 +85,7 @@ export default function AssumptionsTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {pageRows.map((r) => (
             <tr
               key={r.id}
               className={editing === r.id ? "active-row" : "border-b"}
@@ -127,12 +140,16 @@ export default function AssumptionsTable({
                     <button
                       onClick={() => handleSaveEdit(r.id, r)}
                       className="btn btn-muted p-1"
+                      aria-label="Save assumption"
+                      title="Save"
                     >
                       <CheckIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setEditing(null)}
                       className="btn btn-muted p-1"
+                      aria-label="Cancel edit"
+                      title="Cancel"
                     >
                       <XMarkIcon className="w-4 h-4" />
                     </button>
@@ -142,12 +159,16 @@ export default function AssumptionsTable({
                     <button
                       onClick={() => setEditing(r.id)}
                       className="btn btn-muted p-1"
+                      aria-label="Edit assumption"
+                      title="Edit"
                     >
                       <PencilIcon className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(r.id)}
                       className="btn btn-muted p-1"
+                      aria-label="Delete assumption"
+                      title="Delete"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
@@ -179,6 +200,8 @@ export default function AssumptionsTable({
               <button
                 onClick={handleAdd}
                 className="btn btn-primary text-xs py-1 px-2"
+                aria-label="Add assumption"
+                title="Add assumption"
               >
                 Add
               </button>
@@ -186,6 +209,36 @@ export default function AssumptionsTable({
           </tr>
         </tbody>
       </table>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+        <div>
+          Rows {rows.length === 0 ? 0 : start + 1}-{Math.min(end, rows.length)} of {rows.length}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn btn-muted py-1 px-2 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            aria-label="Previous page"
+            title="Previous"
+          >
+            Prev
+          </button>
+          <span>
+            Page {page} / {totalPages}
+          </span>
+          <button
+            className="btn btn-muted py-1 px-2 disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            aria-label="Next page"
+            title="Next"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
